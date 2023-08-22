@@ -1,0 +1,12 @@
+
+# すべてのディレクトリにある pdf file の除外
+
+*.pdf
+
+# pic.drawio のpdfだけは残す
+
+!/pic.pdf
+
+
+# draw.io の出力するファイルの除外  (.$pic.drawio. 等)
+.\$*
