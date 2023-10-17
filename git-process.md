@@ -106,9 +106,9 @@ branch-a   +--+--+------------+------
 
 なにもないところから、自分のPCで git を用いて管理をする。   
 もしくはすでに自分のPCにあるプロジェクトを Git で管理する。
-
+1. ディレクトリを作成
 1. `git init` で初期化
-    1. カレントディレクトリをリポジトリにし、 `.git` フォルダを作成
+    1. するとカレントディレクトリをリポジトリになり、 `.git` フォルダが作成される
     2. はじめから何かファイルがあっても問題ない
         1. しかしその場合は、add する前に `.gitignore` を書かないと、個人情報等悲惨なことに
             1. add, commit 後でも修正できるが面倒。remote に push した場合は終わり。
@@ -194,8 +194,34 @@ GitHub などのサービスを使えば、リモートにもリポジトリを�
 
 ### 1.5 共同開発
 
+共同開発はざっくりと以下のような流れで行うことが多い
 
 
+1. まずは自分自身ののブランチを切り、そこで作業
+    1. 派生もとは github-flow なら `main`
+    2. コマンドは
+        1. `git branch <new branch>` でブランチ派生(自分がどこのブランチにいるか確かめてから行う)
+        2. `git switch <new branch>` で移動
+        3. `add`, `commit` ...etc
+2. 作業したら**リモートの作業ブランチ** に push
+    1. 上流ブランチを定めたうえで `git push` (自分でローカルでつくったブランチはリモートにはないので、必ず上流ブランチを定める)
+    2. GitHub 上で確かめる
+3. GitHub 上でプルリクエストを出して main 等に merge
+    1. GitHub 上でプルリクエストを出す
+    2. コンフリクトしなかったら merge
+        1. しちゃったらブラウザ上で直すか、ローカルで作業して push
+4. 他の人が行った変更を自分のローカルの `main` ブランチに pull 
+    1. **これは結構頻繁に行うべき**。 
+        1. なぜなら他の人の実装が変わることで自分のが動かなくなる
+        2. コンフリクトが起きやすくなるという危険が増すから
+    2. **`main` にて** `git pull`
+5. ローカルの `main` を、作業しているブランチに merge 
+    1. 作業ブランチに移動し
+    2. `git merge main` 
+    3. もしコンフリクトが起きたら
+        1. `git checkout --theirs <filename>` : `main` ブランチを優先
+        2. `git checkout --ours <filename>` : 作業しているブランチを優先 ...等する
+6. 繰り返し
 
 
 
@@ -203,11 +229,65 @@ GitHub などのサービスを使えば、リモートにもリポジトリを�
 
 ### 2.1 .gitignore
 
+Git の管理下に置きたくないファイル等を記述する。例えば以下のようなものは置きたくない
+
+* 個人情報等公開できない情報
+* ライブラリ、パッケージのディレクトリ等
+* 一時ファイル等
+
+`.gitignore` には1行で1つのものを記述する
+
+例)
+```.gitignore
+# `#` はコメントアウト
+# ----------------
+# --+
+#   |
+#   +- .git/
+#   +- .gitignore
+#   +- hoge.txt
+#   +- q.pdf
+#   +- dir3/
+#   |   +- p.pdf
+#   |   +- die2/
+    |       +- b.txt    
+#   +- dir1/
+#       +- hoge.txt
+#       +- huga.txt
+#       +- dir2/
+#           +- a.txt        
+# ---------------^
+
+hoge.txt        # 全てのディレクトリにある `hoge.txt` を無視
+dir2/           # 全てのディレクトリにある dir2 ディレクトリを無視
+
+/dir1/huga.txt  # `.gitignore` があるパスから相対パス
+
+*.pdf           # 全ての pdf ファイルを無視
+```
+
+
+#### 2.1 _ref
+1. LeadingTech. "gitignoreの書き方チートシート【テンプレあり】". WiseLoan Engineer Blog.  
+     [https://leadingtech.co.jp/wiseloan/gitignore/](https://leadingtech.co.jp/wiseloan/gitignore/), (accessed: Oct. 18, 2023).
+
+1. @inabe49. ".gitignore の書き方". qiita.  
+     [https://qiita.com/inabe49/items/16ee3d9d1ce68daa9fff](https://qiita.com/inabe49/items/16ee3d9d1ce68daa9fff), (accessed: Oct. 18, 2023).
 
 
 
 
+### commit, add の取り消し方
 
+* `git reset <filename>`:ステージングエリアをクリアする
+    * ファイル名を指定したら、そのファイルの add だけ取消 
+`git reset --soft <commit id>`: 現在の状態(HEAD)を指定されたコミットと同じ状態にする
+    * `git reset --softed HEAD^`: で直前のコミットを取消.
+    * ステージングエリアは消えない
+* `git reset --mixed <commit id>` : --soft と似ているがステージングエリアも変化
+    * `git reset --mixed HEAD^`で直前のコミットを取消、ステージングエリアも削除
+* `git reset --hard <commit id>`: 上記2つと似るが、ファイル⾃体も指定されたコミットと同じ状態にする。
+    * add 前のファイルを⼀⻫に訂正可。 その場合は git reset --hard HEAD
 
 
 ## 参考文献
@@ -222,3 +302,23 @@ GitHub などのサービスを使えば、リモートにもリポジトリを�
 
 1. EaGitro. "Presantation_Git_GitHub_long". GitHub.    
      [https://github.com/EaGitro/Presantation_Git_GitHub_long](https://github.com/EaGitro/Presantation_Git_GitHub_long), (accessed: Aug. 23, 2023).
+
+
+* https://qiita.com/shuntaro_tamura/items/db1aef9cf9d78db50ffe
+* https://codelikes.com/git-fetch/
+* https://backlog.com/ja/git-tutorial/
+* https://zenn.dev/kaityo256/articles/inside_the_branch
+* https://dev.classmethod.jp/articles/howtogit_forbeginner/
+* https://tracpath.com/docs/git-fetch/
+* https://www.agent-grow.com/self20percent/2019/01/21/github-pull-request-marge-3-type/
+* https://www-creators.com/archives/4931
+* https://qiita.com/uasi/items/69368c17c79e99aaddbf
+* https://ottan.jp/posts/2019/04/git-basis-beginner-remote-repository/
+* https://qiita.com/wann/items/688bc17460a457104d7d
+* https://kaityo256.github.io/github/remote/index.html
+* https://tech-blog.rakus.co.jp/entry/20220805/git
+* https://qiita.com/nt-7/items/c5ea999a2638e03ee418
+* https://www.youtube.com/watch?v=f4BRgGAXyek
+* https://www.youtube.com/watch?v=_RLmIG8rRIc
+* https://aoyama.udemy.com/course/git100test/learn/lecture/29034050#overview
+* https://www.r-staffing.co.jp/engineer/entry/20191129_1
