@@ -287,7 +287,7 @@ dir2/           # 全てのディレクトリにある dir2 ディレクトリ�
 * `git reset --mixed <commit id>` : --soft と似ているがステージングエリアも変化
     * `git reset --mixed HEAD^`で直前のコミットを取消、ステージングエリアも削除
 * `git reset --hard <commit id>`: 上記2つと似るが、ファイル⾃体も指定されたコミットと同じ状態にする。
-    * add 前のファイルを⼀⻫に訂正可。 その場合は git reset --hard HEAD
+    * add 前のファイルを⼀⻫に訂正可。 その場合は `git reset --hard HEAD`
 
 
 ## 参考文献
