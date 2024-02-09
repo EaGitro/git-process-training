@@ -156,7 +156,7 @@ branch-a   +--+--+------------+------
     1. コミットメッセージはなるべくわかりやすく書く
     2. `git diff --staged` や `git status` でステージングエリアとリポジトリを差を比較する
     3. コミットをある状態に戻すには `git reset --soft <commit id>` か `git reset --mixed <` を使う
-        1. `git reset --soft <commit id>` : コミットのみを取り消し、ある時点のコミットと同じ状態にする。ステージングエリアは変更しない。`^HEAD` で直前のコミットを取り消し。
+        1. `git reset --soft <commit id>` : コミットのみを取り消し、ある時点のコミットと同じ状態にする。ステージングエリアは変更しない。`HARD`で直前のコミットと同じ状態にする。`^HEAD` で直前のコミットを取り消し。
         2. `git reset --mixed <commit id>` : --soft と似ているがステージングエリアも変化。
         3. `git reset --hard <commit id>` : 上記2つと似るが、ファイル⾃体も指定されたコミットと同じ状態にする。
 
@@ -253,25 +253,26 @@ Git の管理下に置きたくないファイル等を記述する。例えば�
 #   |
 #   +- .git/
 #   +- .gitignore
-#   +- hoge.txt
-#   +- q.pdf
+#   +- hoge.txt             --- (1)
+#   +- q.pdf                --- (4)
 #   +- dir3/
-#   |   +- p.pdf
-#   |   +- die2/
-    |       +- b.txt    
+#   |   +- p.pdf            --- (4)
+#   |   +- die2/            --- (2)
+    |       +- b.txt        --- (2)
 #   +- dir1/
-#       +- hoge.txt
-#       +- huga.txt
-#       +- dir2/
-#           +- a.txt        
+#       +- piyo.txt    
+#       +- hoge.txt         --- (1)
+#       +- huga.txt         --- (3)
+#       +- dir2/            --- (2)
+#           +- a.txt        --- (2)
 # ---------------^
 
-hoge.txt        # 全てのディレクトリにある `hoge.txt` を無視
-dir2/           # 全てのディレクトリにある dir2 ディレクトリを無視
+hoge.txt        # 全てのディレクトリにある `hoge.txt` を無視  --- (1)
+dir2/           # 全てのディレクトリにある dir2 ディレクトリより下を無視  --- (2)
 
-/dir1/huga.txt  # `.gitignore` があるパスから相対パス
+/dir1/huga.txt  # `.gitignore` があるパスから相対パス  --- (3)
 
-*.pdf           # 全ての pdf ファイルを無視
+*.pdf           # 全ての pdf ファイルを無視  --- (4)
 ```
 
 
@@ -297,6 +298,41 @@ dir2/           # 全てのディレクトリにある dir2 ディレクトリ�
 * `git reset --hard <commit id>`: 上記2つと似るが、ファイル⾃体も指定されたコミットと同じ状態にする。
     * add 前のファイルを⼀⻫に訂正可。 その場合は `git reset --hard HEAD`
 
+
+
+### remote にのみあるブランチを local に持ってきたい
+
+* 現在 local の origin にもないブランチを remote からもってきたい(`git branch -a` にないもの)
+    * `git branch -a` で表示されるものは普通にあるので `git switch <branch name>` で移動できる。(ここに出てくるものは「リモート追跡ブランチ」で `origin/<branch name>` のようなもの)
+1. やり方 1
+    1. `git feetch` を行うことで、すべてのリモートブランチに対してリモート追跡ブランチを置くことができる
+    2. `git switch <branch name>` で移れるように
+        ```sh
+        # リモートから `foo` ブランチを持ってきたい(リモートにあるのは main, hoge, piyo, foo, baz)
+        > git branch -a     # `foo` ブランチはない
+        * main
+          hoge
+          remotes/origin/main   # `main` の リモート追跡ブランチ
+          remotes/origin/hoge   # `hoge` のリモート追跡ブランチ
+          remotes/origin/piyo   # 途中から clone した場合など、リモート追跡ブランチのみがある場合も
+        
+        > git fetch         # 全てのリモートのリモート追跡ブランチを置く
+
+        > git branch -a
+        * main
+          hoge
+          remotes/origin/main
+          remotes/origin/hoge
+          remotes/origin/piyo
+          remotes/origin/foo        # `foo` を持ってこれた
+          remotes/origin/baz        # でも `baz` も持ってきちゃった
+        
+        > git switch foo
+        Switched to a new branch 'foo'
+        branch 'foo' set up to track 'origin/foo'.
+        ```
+2. やり方 2
+    1. 
 
 ## 参考文献
 
